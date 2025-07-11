@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BarChart3, Calendar, DollarSign, FileText, RefreshCw } from 'lucide-react';
+import { BarChart3, Calendar, DollarSign, FileText, RefreshCw, AlertCircle, Wifi, WifiOff } from 'lucide-react';
 import BillCard from './BillCard';
 import SummaryCard from './SummaryCard';
 import CategoryChart from './CategoryChart';
@@ -12,6 +12,8 @@ const ResultsPanel = ({ lastChatUpdate }) => {
   const [summary, setSummary] = useState(null);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [connectionStatus, setConnectionStatus] = useState('connected');
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
@@ -32,20 +34,37 @@ const ResultsPanel = ({ lastChatUpdate }) => {
 
   const loadData = async () => {
     setLoading(true);
+    setError(null);
+    
     try {
       const [billsData, upcomingData, summaryData, statsData] = await Promise.all([
-        billsAPI.getAll({ limit: 50 }),
-        billsAPI.getUpcoming(30),
-        analyticsAPI.getSummary(),
-        analyticsAPI.getStats(),
+        billsAPI.getAll({ limit: 50 }).catch(e => {
+          console.warn('Bills API failed:', e);
+          return [];
+        }),
+        billsAPI.getUpcoming(30).catch(e => {
+          console.warn('Upcoming bills API failed:', e);
+          return { upcoming_bills: [] };
+        }),
+        analyticsAPI.getSummary().catch(e => {
+          console.warn('Summary API failed:', e);
+          return null;
+        }),
+        analyticsAPI.getStats().catch(e => {
+          console.warn('Stats API failed:', e);
+          return null;
+        }),
       ]);
 
-      setBills(billsData);
+      setBills(Array.isArray(billsData) ? billsData : []);
       setUpcomingBills(upcomingData.upcoming_bills || []);
       setSummary(summaryData);
       setStats(statsData);
+      setConnectionStatus('connected');
     } catch (error) {
       console.error('Failed to load data:', error);
+      setError('Failed to load data from server');
+      setConnectionStatus('disconnected');
     } finally {
       setLoading(false);
     }
@@ -58,6 +77,20 @@ const ResultsPanel = ({ lastChatUpdate }) => {
     } catch (error) {
       console.error('Failed to update bill status:', error);
     }
+  };
+
+  const renderConnectionStatus = () => {
+    if (connectionStatus === 'disconnected') {
+      return (
+        <div className="p-3 bg-error-50 border-b border-error-200">
+          <div className="flex items-center gap-2 text-error-700">
+            <WifiOff size={16} />
+            <span className="text-sm">Cannot connect to backend server. Please ensure it's running on http://localhost:8000</span>
+          </div>
+        </div>
+      );
+    }
+    return null;
   };
 
   const renderOverview = () => (
@@ -124,10 +157,11 @@ const ResultsPanel = ({ lastChatUpdate }) => {
           ))}
         </div>
         
-        {bills.length === 0 && (
+        {bills.length === 0 && !loading && (
           <div className="text-center text-gray-500 py-8">
             <FileText size={48} className="mx-auto mb-4 text-gray-300" />
             <p>No bills found. Try adding some bills through the chat!</p>
+            <p className="text-sm mt-2">Example: "Add a bill: Electric $120 due July 15th"</p>
           </div>
         )}
       </div>
@@ -157,10 +191,11 @@ const ResultsPanel = ({ lastChatUpdate }) => {
         ))}
       </div>
       
-      {bills.length === 0 && (
+      {bills.length === 0 && !loading && (
         <div className="text-center text-gray-500 py-8">
           <FileText size={48} className="mx-auto mb-4 text-gray-300" />
           <p>No bills found. Try adding some bills through the chat!</p>
+          <p className="text-sm mt-2">Example: "Add a bill: Electric $120 due July 15th"</p>
         </div>
       )}
     </div>
@@ -189,7 +224,7 @@ const ResultsPanel = ({ lastChatUpdate }) => {
         ))}
       </div>
       
-      {upcomingBills.length === 0 && (
+      {upcomingBills.length === 0 && !loading && (
         <div className="text-center text-gray-500 py-8">
           <Calendar size={48} className="mx-auto mb-4 text-gray-300" />
           <p>No upcoming bills in the next 30 days!</p>
@@ -199,6 +234,17 @@ const ResultsPanel = ({ lastChatUpdate }) => {
   );
 
   const renderContent = () => {
+    if (loading && bills.length === 0) {
+      return (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <RefreshCw size={32} className="mx-auto mb-4 text-gray-400 animate-spin" />
+            <p className="text-gray-600">Loading data...</p>
+          </div>
+        </div>
+      );
+    }
+
     switch (activeTab) {
       case 'overview':
         return renderOverview();
@@ -217,6 +263,13 @@ const ResultsPanel = ({ lastChatUpdate }) => {
       <div className="bg-white border-b">
         <div className="flex items-center justify-between p-4">
           <h2 className="font-semibold text-gray-900">Dashboard</h2>
+          <div className="flex items-center gap-2">
+            {connectionStatus === 'connected' ? (
+              <Wifi size={16} className="text-success-500" />
+            ) : (
+              <WifiOff size={16} className="text-error-500" />
+            )}
+          </div>
         </div>
         
         <div className="flex border-b">
@@ -239,6 +292,9 @@ const ResultsPanel = ({ lastChatUpdate }) => {
           })}
         </div>
       </div>
+
+      {/* Connection Status */}
+      {renderConnectionStatus()}
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto scrollbar-thin p-6">

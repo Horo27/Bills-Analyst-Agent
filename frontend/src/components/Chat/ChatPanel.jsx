@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { MessageSquare, Trash2 } from 'lucide-react';
+import { MessageSquare, Trash2, AlertCircle } from 'lucide-react';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 import { agentAPI } from '../../services/api';
@@ -7,6 +7,7 @@ import { agentAPI } from '../../services/api';
 const ChatPanel = ({ onDataUpdate }) => {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -33,10 +34,14 @@ const ChatPanel = ({ onDataUpdate }) => {
       }
     } catch (error) {
       console.error('Failed to load chat history:', error);
+      // Don't show error for history loading failure
     }
   };
 
   const handleSendMessage = async (message) => {
+    // Clear any previous errors
+    setError(null);
+    
     // Add user message immediately
     const userMessage = {
       type: 'human',
@@ -70,13 +75,24 @@ const ChatPanel = ({ onDataUpdate }) => {
     } catch (error) {
       console.error('Chat error:', error);
       
-      const errorMessage = {
+      let errorMessage = 'Sorry, I encountered an error. Please try again.';
+      
+      if (error.code === 'ECONNABORTED') {
+        errorMessage = 'Request timed out. Please check if the backend server is running.';
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (!error.response) {
+        errorMessage = 'Cannot connect to server. Please make sure the backend is running on http://localhost:8000';
+      }
+      
+      const aiErrorMessage = {
         type: 'ai',
-        content: 'Sorry, I encountered an error. Please try again.',
+        content: errorMessage,
         timestamp: new Date().toISOString(),
       };
       
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => [...prev, aiErrorMessage]);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -89,6 +105,7 @@ const ChatPanel = ({ onDataUpdate }) => {
         await agentAPI.clearSession(sessionId);
       }
       setMessages([]);
+      setError(null);
       localStorage.removeItem('sessionId');
     } catch (error) {
       console.error('Failed to clear chat:', error);
@@ -112,11 +129,21 @@ const ChatPanel = ({ onDataUpdate }) => {
         </button>
       </div>
 
+      {/* Connection Status */}
+      {error && (
+        <div className="p-3 bg-error-50 border-b border-error-200">
+          <div className="flex items-center gap-2 text-error-700">
+            <AlertCircle size={16} />
+            <span className="text-sm">Connection issue detected. Make sure the backend server is running.</span>
+          </div>
+        </div>
+      )}
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto scrollbar-thin">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-500">
-            <div className="text-center">
+            <div className="text-center max-w-md px-4">
               <MessageSquare size={48} className="mx-auto mb-4 text-gray-300" />
               <p className="text-lg font-medium mb-2">Welcome to Smart Home Assistant</p>
               <p className="text-sm">
@@ -124,6 +151,14 @@ const ChatPanel = ({ onDataUpdate }) => {
                 <br />
                 I can help you add bills, get summaries, and track upcoming payments.
               </p>
+              <div className="mt-4 text-xs text-gray-400">
+                <p>Try saying:</p>
+                <ul className="mt-2 space-y-1">
+                  <li>"Add a bill: Electric $120 due July 15th"</li>
+                  <li>"Show me my monthly summary"</li>
+                  <li>"What bills are due soon?"</li>
+                </ul>
+              </div>
             </div>
           </div>
         ) : (
