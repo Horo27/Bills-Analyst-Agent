@@ -1,0 +1,29 @@
+# Core dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+langgraph
+langchain
+langchain-core
+langchain-openai
+
+# Database
+sqlalchemy
+psycopg2-binary
+alembic
+
+# Validation and parsing
+pydantic
+pydantic-settings
+
+# Utilities
+python-dotenv
+python-multipart
+httpx
+tenacity
+
+# Development
+pytest
+pytest-asyncio
+black
+isort
+mypy
