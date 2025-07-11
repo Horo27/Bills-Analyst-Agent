@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "autoprefixer": "^10.4.21",
     "axios": "^1.10.0",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.525.0",
