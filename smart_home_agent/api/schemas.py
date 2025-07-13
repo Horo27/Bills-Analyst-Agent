@@ -18,10 +18,10 @@ class BillStatusEnum(str, Enum):
 class BillFrequencyEnum(str, Enum):
     """Bill frequency options"""
     ONE_TIME = "ONE_TIME"
-    WEEKLY = "weekly"
-    MONTHLY = "monthly"
-    QUARTERLY = "quarterly"
-    ANNUALLY = "annually"
+    WEEKLY = "WEEKLY"
+    MONTHLY = "MONTHLY"
+    QUARTERLY = "QUARTERLY"
+    ANNUALLY = "ANNUALLY"
 
 
 # Request schemas

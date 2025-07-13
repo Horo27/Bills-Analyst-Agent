@@ -236,7 +236,7 @@ async def get_upcoming_bills(
         bills = expense_service.get_upcoming_bills(days)
 
         return {
-            "upcoming_bills": [BillResponse.from_orm(bill) for bill in bills],
+            "upcoming_bills": [BillResponse.model_validate(bill) for bill in bills],
             "count": len(bills),
             "days_ahead": days
         }

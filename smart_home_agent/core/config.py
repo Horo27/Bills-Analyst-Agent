@@ -35,7 +35,7 @@ class Settings(BaseSettings):
 
     # API
     API_PREFIX: str = Field(default="/api/v1")
-    CORS_ORIGINS: List[str] = Field(default=["http://localhost:3000", "http://localhost:8080"])
+    CORS_ORIGINS: List[str] = Field(default=["http://localhost:3000", "http://localhost:8080", "http://localhost:5173"])
 
     # Agent
     AGENT_MODEL: str = Field(default="deepseek/deepseek-r1:free")
