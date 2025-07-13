@@ -109,16 +109,24 @@ smart_home_agent/
    # Edit .env with your database credentials and OpenAI API key
    ```
 
-6. **Initialize database & start the App**
+6. **Initialize database & start the backend**
    ```bash
    uvicorn main:app --reload
+   ```
+   
+6. **Install Front-end Dependencies and Run**
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
    ```
 
 ## Usage
 
 ### API Documentation
 
-The API will be available at `http://localhost:8000`
+The Frontend API will be available at `http://localhost:3000`
+The Backend API will be available at `http://localhost:8000`
 
 Once the server is running, you can access:
 - **Swagger UI**: `http://localhost:8000/docs`
