@@ -109,7 +109,7 @@ smart_home_agent/
    # Edit .env with your database credentials and OpenAI API key
    ```
 
-6. **Initialize database**
+6. **Initialize database & start the App**
    ```bash
    uvicorn main:app --reload
    ```
