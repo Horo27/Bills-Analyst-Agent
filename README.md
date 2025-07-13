@@ -116,15 +116,9 @@ smart_home_agent/
 
 ## Usage
 
-### Starting the Server
-
-```bash
-python main.py
-```
+### API Documentation
 
 The API will be available at `http://localhost:8000`
-
-### API Documentation
 
 Once the server is running, you can access:
 - **Swagger UI**: `http://localhost:8000/docs`
@@ -238,33 +232,6 @@ The application uses the following main tables:
 - `bills`: Bills and expenses
 - `maintenance_tasks`: Maintenance tasks
 
-## Development
-
-### Running Tests
-
-```bash
-pytest
-```
-
-### Code Formatting
-
-```bash
-black smart_home_agent/
-isort smart_home_agent/
-```
-
-### Type Checking
-
-```bash
-mypy smart_home_agent/
-```
-
-## Docker Deployment
-
-```bash
-# Build and run with docker-compose
-docker-compose up -d
-```
 
 ## API Reference
 
